@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4F46E5">
+<title>体調管理チェック</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    background: #F3F4F6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  .logo {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .logo h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1F2937;
+    margin-top: 8px;
+  }
+  .logo p {
+    font-size: 13px;
+    color: #6B7280;
+    margin-top: 4px;
+  }
+  .icon-circle {
+    width: 56px;
+    height: 56px;
+    background: #EEF2FF;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 28px;
+  }
+  .section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 20px 0 8px;
+  }
+  .user-info {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .user-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .user-name { font-size: 15px; font-weight: 600; color: #1F2937; }
+  .user-emp  { font-size: 12px; color: #6B7280; margin-top: 2px; }
+
+  .office-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .office-btn {
+    border: 2px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 12px 8px;
+    background: #fff;
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    transition: all 0.15s;
+  }
+  .office-btn:hover  { border-color: #A5B4FC; background: #EEF2FF; }
+  .office-btn.active { border-color: #4F46E5; background: #EEF2FF; color: #4F46E5; }
+  .office-btn .office-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+  .location-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 8px;
+  }
+  .location-status.checking { background: #FFF7ED; color: #92400E; }
+  .location-status.ok       { background: #ECFDF5; color: #065F46; }
+  .location-status.ng       { background: #FEF2F2; color: #991B1B; }
+  .location-status.pc       { background: #EEF2FF; color: #3730A3; }
+
+  .check-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .check-item {
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: #fff;
+  }
+  .check-item:hover { border-color: #A5B4FC; }
+  .check-item.ok-active { border-color: #10B981; background: #ECFDF5; }
+  .check-item.ng-active { border-color: #EF4444; background: #FEF2F2; }
+  .check-icon  { font-size: 28px; display: block; margin-bottom: 6px; }
+  .check-label { font-size: 15px; font-weight: 700; }
+  .check-item.ok-active .check-label { color: #065F46; }
+  .check-item.ng-active .check-label { color: #991B1B; }
+  .check-sub   { font-size: 11px; color: #9CA3AF; margin-top: 2px; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: #4F46E5;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: background 0.15s;
+  }
+  .submit-btn:hover    { background: #4338CA; }
+  .submit-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+
+  .time-badge {
+    display: inline-block;
+    background: #FFF7ED;
+    color: #92400E;
+    border: 1px solid #FED7AA;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .outside-time {
+    text-align: center;
+    padding: 20px;
+    color: #6B7280;
+    font-size: 14px;
+  }
+
+  /* ログイン画面 */
+  #login-screen { display: block; }
+  #main-screen  { display: none; }
+  #done-screen  { display: none; }
+
+  .google-btn {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    transition: border-color 0.15s;
+  }
+  .google-btn:hover { border-color: #4F46E5; }
+  .google-logo { font-size: 20px; }
+
+  /* 完了画面 */
+  .done-icon { font-size: 64px; text-align: center; margin: 16px 0; }
+  .done-title { font-size: 22px; font-weight: 700; color: #1F2937; text-align: center; }
+  .done-sub   { font-size: 14px; color: #6B7280; text-align: center; margin-top: 8px; }
+  .done-detail {
+    background: #F9FAFB;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.8;
+  }
+  .alert-banner {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #991B1B;
+    font-weight: 600;
+  }
+
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid #E5E7EB;
+    border-top-color: #4F46E5;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ===== ログイン画面 ===== -->
+<div class="card" id="login-screen">
+  <div class="logo">
+    <div class="icon-circle">🏥</div>
+    <h1>体調管理チェック</h1>
+    <p>出勤時の体調・アルコール確認</p>
+  </div>
+  <div id="time-check-login"></div>
+  <button class="google-btn" onclick="signIn()">
+    <span class="google-logo">G</span>
+    Googleアカウントでログイン
+  </button>
+  <p style="font-size:12px;color:#9CA3AF;text-align:center;margin-top:12px;">
+    社内Googleアカウントでログインしてください
+  </p>
+</div>
+
+<!-- ===== メイン入力画面 ===== -->
+<div class="card" id="main-screen">
+  <div class="logo">
+    <div class="icon-circle">✅</div>
+    <h1>体調チェック</h1>
+  </div>
+
+  <div id="time-badge-area"></div>
+
+  <!-- ユーザー情報 -->
+  <div class="section-label">ログイン中</div>
+  <div class="user-info">
+    <div id="user-avatar-wrap">
+      <div class="user-avatar-placeholder">👤</div>
+    </div>
+    <div>
+      <div class="user-name" id="user-name-display">読み込み中...</div>
+      <div class="user-emp"  id="user-emp-display"></div>
+    </div>
+  </div>
+
+  <!-- 事業所選択 -->
+  <div class="section-label">今日の出勤先</div>
+  <div class="office-grid">
+    <button class="office-btn" onclick="selectOffice('本社・各務原店')" id="office-0">
+      <span class="office-icon">🏢</span>本社・各務原店
+    </button>
+    <button class="office-btn" onclick="selectOffice('尾張小牧店')" id="office-1">
+      <span class="office-icon">🏬</span>尾張小牧店
+    </button>
+    <button class="office-btn" onclick="selectOffice('長良店')" id="office-2" style="grid-column: span 2;">
+      <span class="office-icon">🏪</span>長良店
+    </button>
+  </div>
+
+  <!-- 位置情報ステータス -->
+  <div id="location-status" class="location-status checking" style="display:none;">
+    <span class="spinner"></span> 位置情報を確認中...
+  </div>
+
+  <!-- アルコールチェック -->
+  <div class="section-label">🍺 アルコールチェック</div>
+  <div class="check-grid">
+    <div class="check-item" id="alc-ok" onclick="selectCheck('alcohol','可')">
+      <span class="check-icon">✅</span>
+      <div class="check-label">可</div>
+      <div class="check-sub">問題なし</div>
+    </div>
+    <div class="check-item" id="alc-ng" onclick="selectCheck('alcohol','不可')">
+      <span class="check-icon">🚫</span>
+      <div class="check-label">不可</div>
+      <div class="check-sub">飲酒あり</div>
+    </div>
+  </div>
+
+  <!-- 体調チェック -->
+  <div class="section-label">🩺 本日の体調</div>
+  <div class="check-grid">
+    <div class="check-item" id="cond-ok" onclick="selectCheck('condition','可')">
+      <span class="check-icon">😊</span>
+      <div class="check-label">可</div>
+      <div class="check-sub">良好</div>
+    </div>
+    <div class="check-item" id="cond-ng" onclick="selectCheck('condition','不可')">
+      <span class="check-icon">🤒</span>
+      <div class="check-label">不可</div>
+      <div class="check-sub">不調あり</div>
+    </div>
+  </div>
+
+  <button class="submit-btn" id="submit-btn" onclick="submitCheck()" disabled>
+    送信する
+  </button>
+</div>
+
+<!-- ===== 完了画面 ===== -->
+<div class="card" id="done-screen">
+  <div class="done-icon" id="done-icon">✅</div>
+  <div class="done-title" id="done-title">チェック完了</div>
+  <div class="done-sub"  id="done-sub">記録しました</div>
+  <div class="done-detail" id="done-detail"></div>
+  <div id="alert-banner" style="display:none" class="alert-banner">
+    ⚠️ 承認者に通知しました
+  </div>
+</div>
+
+<script>
+// ===== 設定 =====
+const GAS_URL = 'YOUR_GAS_URL'; // ← 後でGASのURLに変更
+
+const OFFICES = {
+  '本社・各務原店': { lat: 35.3966235, lng: 136.9365571 },
+  '尾張小牧店':    { lat: 35.3047121, lng: 136.9468285 },
+  '長良店':        { lat: 35.4545648, lng: 136.7749869 },
+};
+const RADIUS_M   = 200;
+const CHECK_START = 7;
+const CHECK_END_H = 8;
+const CHECK_END_M = 50;
+
+// ===== 状態管理 =====
+let state = {
+  user:      null,
+  empNo:     null,
+  office:    null,
+  alcohol:   null,
+  condition: null,
+  lat:       null,
+  lng:       null,
+  locationOk: false,
+  isMobile:  /iPhone|Android/i.test(navigator.userAgent),
+};
+
+// ===== 初期化 =====
+window.onload = () => {
+  checkTime();
+  // Googleログイン済みかチェック（簡易版：localStorageで保持）
+  const saved = localStorage.getItem('hc_user');
+  if (saved) {
+    state.user = JSON.parse(saved);
+    showMainScreen();
+  }
+};
+
+function checkTime() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const inTime = (h > CHECK_START || (h === CHECK_START)) &&
+                 (h < CHECK_END_H || (h === CHECK_END_H && m <= CHECK_END_M));
+
+  const area = document.getElementById('time-badge-area');
+  if (area) {
+    area.innerHTML = inTime
+      ? `<div class="time-badge">⏰ 受付中 ${CHECK_START}:00〜${CHECK_END_H}:${String(CHECK_END_M).padStart(2,'0')}</div>`
+      : `<div class="time-badge" style="background:#FEF2F2;color:#991B1B;border-color:#FECACA;">⚠️ 受付時間外（${CHECK_START}:00〜${CHECK_END_H}:${String(CHECK_END_M).padStart(2,'0')}）</div>`;
+  }
+}
+
+// ===== ログイン（簡易版） =====
+function signIn() {
+  // 実際のGoogle OAuth実装前のデモ用
+  const name = prompt('お名前を入力してください（テスト用）');
+  const empNo = prompt('社員番号を入力してください');
+  if (!name || !empNo) return;
+  state.user  = { name, empNo };
+  state.empNo = empNo;
+  localStorage.setItem('hc_user', JSON.stringify(state.user));
+  showMainScreen();
+}
+
+function showMainScreen() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display  = 'block';
+  document.getElementById('user-name-display').textContent = state.user.name;
+  document.getElementById('user-emp-display').textContent  = `社員番号：${state.user.empNo}`;
+  state.empNo = state.user.empNo;
+  checkTime();
+}
+
+// ===== 事業所選択 =====
+function selectOffice(name) {
+  state.office = name;
+  document.querySelectorAll('.office-btn').forEach(b => b.classList.remove('active'));
+  const btns = document.querySelectorAll('.office-btn');
+  btns.forEach(b => { if (b.textContent.includes(name.replace('・各務原店','').replace('店',''))) b.classList.add('active'); });
+  // ボタンのテキストで照合
+  ['office-0','office-1','office-2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.textContent.includes(name.replace('本社・各務原店','本社').replace('尾張小牧店','小牧').replace('長良店','長良'))) {
+      el.classList.add('active');
+    }
+  });
+
+  if (state.isMobile) {
+    getLocation();
+  } else {
+    state.locationOk = true;
+    showLocationStatus('pc', '💻 PC入力モード（位置確認スキップ）');
+    updateSubmitBtn();
+  }
+}
+
+// ===== 位置情報 =====
+function getLocation() {
+  const statusEl = document.getElementById('location-status');
+  statusEl.style.display = 'flex';
+  statusEl.className = 'location-status checking';
+  statusEl.innerHTML = '<span class="spinner"></span> 位置情報を確認中...';
+
+  if (!navigator.geolocation) {
+    showLocationStatus('ng', '❌ 位置情報が使えません');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      state.lat = pos.coords.latitude;
+      state.lng = pos.coords.longitude;
+      const office = OFFICES[state.office];
+      const dist   = calcDistance(state.lat, state.lng, office.lat, office.lng);
+      if (dist <= RADIUS_M) {
+        state.locationOk = true;
+        showLocationStatus('ok', `✅ 位置確認OK（${state.office}から約${Math.round(dist)}m）`);
+      } else {
+        state.locationOk = false;
+        showLocationStatus('ng', `❌ 事業所から離れています（約${Math.round(dist)}m）`);
+      }
+      updateSubmitBtn();
+    },
+    err => {
+      state.locationOk = false;
+      showLocationStatus('ng', '❌ 位置情報の取得に失敗しました');
+      updateSubmitBtn();
+    },
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
+
+function showLocationStatus(type, msg) {
+  const el = document.getElementById('location-status');
+  el.style.display = 'flex';
+  el.className = `location-status ${type}`;
+  el.innerHTML = msg;
+}
+
+function calcDistance(lat1, lng1, lat2, lng2) {
+  const R  = 6371000;
+  const dL = (lat2 - lat1) * Math.PI / 180;
+  const dl = (lng2 - lng1) * Math.PI / 180;
+  const a  = Math.sin(dL/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dl/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ===== チェック選択 =====
+function selectCheck(type, value) {
+  if (type === 'alcohol') {
+    state.alcohol = value;
+    document.getElementById('alc-ok').className = 'check-item' + (value === '可' ? ' ok-active' : '');
+    document.getElementById('alc-ng').className = 'check-item' + (value === '不可' ? ' ng-active' : '');
+  } else {
+    state.condition = value;
+    document.getElementById('cond-ok').className = 'check-item' + (value === '可' ? ' ok-active' : '');
+    document.getElementById('cond-ng').className = 'check-item' + (value === '不可' ? ' ng-active' : '');
+  }
+  updateSubmitBtn();
+}
+
+function updateSubmitBtn() {
+  const btn = document.getElementById('submit-btn');
+  const ok  = state.office && state.alcohol && state.condition && state.locationOk;
+  btn.disabled = !ok;
+}
+
+// ===== 送信 =====
+async function submitCheck() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 送信中...';
+
+  const payload = {
+    empNo:     state.empNo,
+    alcohol:   state.alcohol,
+    condition: state.condition,
+    lat:       state.lat,
+    lng:       state.lng,
+    device:    state.isMobile ? 'スマホ' : 'PC',
+    officeName: state.office,
+  };
+
+  try {
+    const res  = await fetch(GAS_URL, {
+      method: 'POST',
+      body:   JSON.stringify(payload),
+    });
+    const data = await res.json();
+    showDoneScreen(data);
+  } catch(e) {
+    // GAS未設定時はローカル確認用
+    showDoneScreen({ ok: true, name: state.user.name, _local: true });
+  }
+}
+
+function showDoneScreen(data) {
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('done-screen').style.display = 'block';
+
+  const hasNg = state.alcohol === '不可' || state.condition === '不可';
+  document.getElementById('done-icon').textContent  = hasNg ? '⚠️' : '✅';
+  document.getElementById('done-title').textContent = hasNg ? '要確認' : 'チェック完了';
+  document.getElementById('done-sub').textContent   = data._local ? '※テストモード（GAS未接続）' : '記録しました';
+
+  const now = new Date();
+  document.getElementById('done-detail').innerHTML = `
+    👤 ${state.user.name}<br>
+    🏢 ${state.office}<br>
+    🍺 アルコール：${state.alcohol}<br>
+    🩺 体調：${state.condition}<br>
+    🕐 ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}
+  `;
+
+  if (hasNg) {
+    document.getElementById('alert-banner').style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
